@@ -82,20 +82,6 @@ class RunConfiguration(
         executor: Executor,
         environment: ExecutionEnvironment
     ): RunProfileState? {
-        val pluginChecker = project.service<PluginCheckerService>()
-        pluginChecker.checkPlugins()
-        val errorMessage = pluginChecker.getErrorMessage(withHeader = false)
-        if (errorMessage != null) {
-            ToolWindowFactory.Util.updateErrorPanel(project, errorMessage)
-            ToolWindowManager.getInstance(project).notifyByBalloon(
-                ToolWindowFactory.ID,
-                MessageType.INFO,
-                "<p>Detected errors in your project's PITest configuration. Check the Error tab!</p>"
-            )
-        } else {
-            ToolWindowFactory.Util.updateErrorPanel(project, null)
-        }
-
         return object : CommandLineState(environment) {
             @NotNull
             @Throws(ExecutionException::class)
