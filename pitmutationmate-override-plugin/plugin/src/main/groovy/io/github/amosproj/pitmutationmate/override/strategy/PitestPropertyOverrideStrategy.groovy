@@ -17,10 +17,10 @@ import org.gradle.api.logging.Logging
  * PitestPropertyOverrideStrategy
  *
  * This class is responsible for overriding the properties of the gradle-pitest-plugin.
- * It is used by the [PITSettingOverridePlugin] to override the values of the
+ * It is used by the PITSettingOverridePlugin to override the values of the
  * gradle-pitest-plugin extension.
  *
- * @see [ PITSettingOverridePlugin ]
+ * @see PITSettingOverridePlugin
  */
 class PitestPropertyOverrideStrategy implements OverrideStrategy {
 

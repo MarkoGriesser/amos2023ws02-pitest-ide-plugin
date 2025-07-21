@@ -19,13 +19,21 @@ import org.gradle.api.logging.Logging
 
 /**
  * Partner Plugin to the PITmutationmate Plugin to allow overriding of specific PITest configuration values.*/
+
 class PITSettingOverridePlugin implements Plugin<Project> {
 
     @SuppressWarnings('FieldName')
     private final static Logger log = Logging.getLogger(PITSettingOverridePlugin)
     private final static String PORT_PROPERTY_NAME = 'port'
+    private final static String TEST_FILE_NAME = 'COMPANION_IS_PRESENT'
 
     void apply(Project project) {
+        // Delete the file at the beginning of each sync and recreate it
+        project.gradle.projectsEvaluated {
+            def worksFile = new File(project.rootDir, TEST_FILE_NAME)
+            worksFile.text = "Plugin version: ${project.version}\n"
+            log.info("Created '${TEST_FILE_NAME}' file in ${project.rootDir}")
+        }
 
         project.tasks.register(PitmutationmateStatusCheckTask.TASK_NAME, PitmutationmateStatusCheckTask)
 
@@ -69,5 +77,4 @@ class PITSettingOverridePlugin implements Plugin<Project> {
             }
         }
     }
-
 }

@@ -17,6 +17,9 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.StandardCharsets
 
+import com.intellij.openapi.externalSystem.model.task.*
+import org.gradle.api.GradleException
+
 @Service(Service.Level.PROJECT)
 class PluginCheckerService(private val project: Project) {
     private val logger = Logger.getInstance(this::class.java)
@@ -26,6 +29,8 @@ class PluginCheckerService(private val project: Project) {
     private var buildFiles = mutableListOf<File>()
     private var testDirectories = mutableListOf<File>()
     private var sourceDirectories = mutableListOf<File>()
+
+    private val TEST_FILE_NAME = "COMPANION_IS_PRESENT"
 
     /**
      * Check if the companion plugin is available and if the pitest plugin is applied
@@ -45,7 +50,7 @@ class PluginCheckerService(private val project: Project) {
                 androidBuildTypes = listOf()
             )
         } else {
-            checkPluginsGradle()
+            checkTestFilePresence()
         }
     }
 
@@ -65,6 +70,12 @@ class PluginCheckerService(private val project: Project) {
         }
     }
 
+    fun crashBuild() {
+        if (!isCompanionPluginAvailable) {
+            throw GradleException("Override plugin is missing!")
+        }
+    }
+
     /**
      * Get the error message for the plugin checks
      *
@@ -81,13 +92,6 @@ class PluginCheckerService(private val project: Project) {
                 getBuildFileName(),
                 getCompanionPluginString()
             )
-        }
-
-        // Check if any of the pitest plugins are missing
-        else if (pluginCheckData == null || (!pluginCheckData!!.pitestPluginApplied && !pluginCheckData!!.androidPitestPluginApplied)) {
-            if (errorMessage.isNotEmpty()) errorMessage += "\n"
-            val (buildFile, pluginString, pluginUrl) = getPitestPluginName()
-            errorMessage += ERROR_MESSAGE_PITEST_PLUGIN_MISSING.format(buildFile, pluginString, pluginUrl)
         }
 
         if (errorMessage.isNotEmpty()) {
@@ -121,24 +125,11 @@ class PluginCheckerService(private val project: Project) {
         return pluginCheckData?.androidBuildTypes ?: emptyList()
     }
 
-    /**
-     * Use the GradleConnector to check for the existence of the pitmutationmateStatusCheck task
-     * to determine if the companion plugin is available.
-     * If the task is available, task is executed, and it's output is checked for the pitest plugins existence.
-     */
-    private fun checkPluginsGradle() {
+    private fun checkTestFilePresence() {
         val projectDir = File(project.basePath ?: "")
-
-        GradleConnector.newConnector().forProjectDirectory(projectDir).connect().use { connection ->
-            // check if the pitmutationmateStatusCheck task is available
-            checkForCompanionPlugin(connection)
-            if (!isCompanionPluginAvailable) {
-                logger.info("Companion plugin is not available. Not checking for plugins.")
-                return
-            }
-            // check if the pitest plugin is available
-            checkForPlugins(connection)
-        }
+        val testFile = File(projectDir, TEST_FILE_NAME)
+        isCompanionPluginAvailable = testFile.exists()
+        logger.info("Test file presence: ${if (isCompanionPluginAvailable) "Found" else "Not found"}")
     }
 
     /**
@@ -185,52 +176,6 @@ class PluginCheckerService(private val project: Project) {
         } catch (e: Exception) {
             logger.warn("Could not get build environment information from gradle", e)
         }
-    }
-
-    /**
-     * Use the GradleConnector to check for the existence of the pitmutationmateStatusCheck task
-     * to determine if the companion plugin is available.
-     */
-    private fun checkForCompanionPlugin(connection: ProjectConnection) {
-        try {
-            val project = connection.getModel(GradleProject::class.java)
-            // Recursively search for the task in the project and its subprojects
-            isCompanionPluginAvailable = findTaskRecursively(project)
-        } catch (e: Exception) {
-            logger.warn("Error while checking for companion plugin. Assuming it is not present!", e)
-            isCompanionPluginAvailable = false
-        }
-    }
-
-    /**
-     * Use the GradleConnector to execute the pitmutationmateStatusCheck task
-     * and check its output for the pitest plugins existence.
-     */
-    private fun checkForPlugins(connection: ProjectConnection) {
-        val outputStream = ByteArrayOutputStream()
-        connection.newBuild().forTasks(TASK_NAME).setStandardOutput(outputStream).run()
-        var output = outputStream.toString(StandardCharsets.UTF_8.name())
-        logger.trace("Got output from check task: $output")
-        // remove content until the first { and from behind until the last }
-        output = "{" + output.substringAfter("{").substringBeforeLast("}") + "}"
-
-        // Deserialize the JSON string into a Kotlin object
-        pluginCheckData = Json.decodeFromString<PluginCheckData>(output)
-        logger.debug("Got plugin check data: $pluginCheckData")
-    }
-
-    /**
-     * Recursively search for the pitmutationmateStatusCheck task in the project and its subprojects
-     */
-    private fun findTaskRecursively(project: GradleProject): Boolean {
-        // Check if the current project contains the task
-        val taskExistsInCurrentProject = project.tasks.any { it.name == TASK_NAME }
-
-        if (taskExistsInCurrentProject) {
-            return true
-        }
-        // Recursively check subprojects
-        return project.children.any { findTaskRecursively(it) }
     }
 
     /**
@@ -310,6 +255,5 @@ class PluginCheckerService(private val project: Project) {
             <p>Please add the following line to your %s file:</p>
             <em>%s</em>
         """.trimIndent()
-        private const val TASK_NAME = "pitmutationmateStatusCheck"
     }
 }

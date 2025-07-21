@@ -4,6 +4,7 @@
 package com.amos.pitmutationmate.pitmutationmate.actions
 
 import com.amos.pitmutationmate.pitmutationmate.icons.Icons
+import com.amos.pitmutationmate.pitmutationmate.services.PluginCheckerService
 import com.amos.pitmutationmate.pitmutationmate.services.TestEnvCheckerService
 import com.intellij.execution.lineMarker.RunLineMarkerContributor
 import com.intellij.openapi.actionSystem.AnAction
@@ -20,6 +21,13 @@ class GutterMarker : RunLineMarkerContributor() {
 
     override fun getInfo(psielement: PsiElement): Info? {
         val project = psielement.project
+
+        val pluginChecker = project.service<PluginCheckerService>()
+        pluginChecker.checkPlugins()
+        val errorMessage = pluginChecker.getErrorMessage(withHeader = false)
+        if (errorMessage != null) {
+            return null
+        }
 
         if (psielement.parent is PsiClass && psielement.text.equals("class")) {
             if (project.service<TestEnvCheckerService>().isPsiTestClass(psielement.parent as PsiClass) || isInnerClass(psielement.parent)) {

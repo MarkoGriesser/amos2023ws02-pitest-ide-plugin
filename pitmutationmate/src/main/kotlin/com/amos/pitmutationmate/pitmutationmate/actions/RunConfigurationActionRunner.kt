@@ -10,30 +10,36 @@ import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
 import com.intellij.openapi.project.Project
 
-class RunConfigurationActionRunner {
-    companion object {
-        private const val DEFAULT_RUN_CONFIG_NAME = "Default"
-        fun updateAndExecuteRunConfig(classFQN: String?, project: Project) {
-            val executor = ExecutorRegistry.getInstance().getExecutorById("Run")
+object RunConfigurationActionRunner {
+    private const val DEFAULT_RUN_CONFIG_NAME = "PITest"
 
-            val runManager = RunManager.getInstance(project)
+    fun updateAndExecuteRunConfig(classFQN: String?, project: Project) {
+        val executor = ExecutorRegistry.getInstance().getExecutorById("Run")
 
-            var runConfig = runManager.findConfigurationByName(DEFAULT_RUN_CONFIG_NAME)
-            if (runConfig == null) {
-                runConfig = runManager.createConfiguration(DEFAULT_RUN_CONFIG_NAME, RunConfigurationType::class.java)
-                (runConfig.configuration as RunConfiguration).isDefault = true
-            }
-            runConfig.configuration.let {
-                val rc = it as RunConfiguration
-                if (classFQN != null) {
-                    // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
-                    rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
-                }
-            }
-            runManager.addConfiguration(runConfig)
-            runManager.selectedConfiguration = runConfig
+        val runManager = RunManager.getInstance(project)
 
-            ProgramRunnerUtil.executeConfiguration(runConfig, executor!!)
+        var runConfig = runManager.findConfigurationByName(DEFAULT_RUN_CONFIG_NAME)
+        if (runConfig == null) {
+            runConfig = runManager.createConfiguration(DEFAULT_RUN_CONFIG_NAME, RunConfigurationType::class.java)
+            (runConfig.configuration as RunConfiguration).isDefault = true
         }
+        runConfig.configuration.let {
+            val rc = it as RunConfiguration
+            if (classFQN != null) {
+                // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
+                rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
+            }
+        }
+        runManager.addConfiguration(runConfig)
+        runManager.selectedConfiguration = runConfig
+
+        ProgramRunnerUtil.executeConfiguration(runConfig, executor!!)
+    }
+
+    // Delete the run configuration if the override plugin is not loaded
+    fun deleteRunConfiguration(project: Project) {
+        val runManager = RunManager.getInstance(project)
+        val configurations = runManager.allSettings.filter { it.name.contains(DEFAULT_RUN_CONFIG_NAME) }
+        configurations.forEach { runManager.removeConfiguration(it) }
     }
 }
