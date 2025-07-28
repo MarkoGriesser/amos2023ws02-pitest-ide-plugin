@@ -36,7 +36,7 @@ class ContextMenuAction : AnAction() {
             }
         }
         logger.info("ContextMenuAction: selected classes are $classFQNs.")
-        RunConfigurationActionRunner.updateAndExecuteRunConfig(classFQNs, project)
+        RunConfigurationActionRunner.updateAndExecuteRunConfig(classFQNs, project, psiFileArray.firstOrNull())
     }
 
     private fun buildClassFQN(psiClass: PsiClass, classFQNs: String): String {
@@ -68,7 +68,7 @@ class ContextMenuAction : AnAction() {
             }
 
             logger.info("ContextMenuAction: selected class is $classFQN.")
-            RunConfigurationActionRunner.updateAndExecuteRunConfig(classFQN, e.project!!)
+            RunConfigurationActionRunner.updateAndExecuteRunConfig(classFQN, e.project!!, psiElement)
         }
     }
 
@@ -98,11 +98,11 @@ class ContextMenuAction : AnAction() {
                 }
 
                 is KtClass -> {
-                    RunConfigurationActionRunner.updateAndExecuteRunConfig(psiElement.fqName.toString(), e.project!!)
+                    RunConfigurationActionRunner.updateAndExecuteRunConfig(psiElement.fqName.toString(), e.project!!, psiElement)
                 }
 
                 is PsiClass -> {
-                    RunConfigurationActionRunner.updateAndExecuteRunConfig(psiElement.qualifiedName, e.project!!)
+                    RunConfigurationActionRunner.updateAndExecuteRunConfig(psiElement.qualifiedName, e.project!!, psiElement)
                 }
             }
         }

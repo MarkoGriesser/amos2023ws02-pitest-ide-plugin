@@ -45,7 +45,11 @@ repositories {
 intellij {
     version.set("2023.3")
     type.set("IC") // Target IDE Platform
-    plugins.set(listOf("org.jetbrains.kotlin", "com.intellij.java"))
+    plugins.set(listOf(
+        "org.jetbrains.kotlin",
+        "com.intellij.java",
+        "org.jetbrains.plugins.gradle"
+    ))
 }
 
 tasks {
@@ -59,8 +63,8 @@ tasks {
     }
 
     patchPluginXml {
-        sinceBuild.set("231")
-        untilBuild.set("241.*")
+        sinceBuild.set("233")
+        untilBuild.set("251")
     }
 
     signPlugin {

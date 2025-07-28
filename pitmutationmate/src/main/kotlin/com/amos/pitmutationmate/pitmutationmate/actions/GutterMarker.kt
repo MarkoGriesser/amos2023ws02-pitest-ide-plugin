@@ -36,7 +36,7 @@ class GutterMarker : RunLineMarkerContributor() {
             val toolTipProvider: (PsiElement) -> String = { _ -> "Run PIT MutationMate on '${(psielement.parent as PsiClass).name}'" }
             val fqn = (psielement.parent as PsiClass).qualifiedName
 
-            return Info(gutterIcon, toolTipProvider, getAction(project, fqn))
+            return Info(gutterIcon, toolTipProvider, getAction(project, fqn, psielement))
         }
         if (psielement.parent is KtClass && psielement.text.equals("class")) {
             if (project.service<TestEnvCheckerService>().isKtTestClass(psielement.parent as KtClass) || isInnerClass(psielement.parent)) {
@@ -44,7 +44,7 @@ class GutterMarker : RunLineMarkerContributor() {
             }
             val toolTipProvider: (PsiElement) -> String = { _ -> "Run PIT MutationMate on '${(psielement.parent as KtClass).name}'" }
             val fqn = (psielement.parent as KtClass).fqName.toString()
-            return Info(gutterIcon, toolTipProvider, getAction(project, fqn))
+            return Info(gutterIcon, toolTipProvider, getAction(project, fqn, psielement))
         }
         return null
     }
@@ -58,10 +58,10 @@ class GutterMarker : RunLineMarkerContributor() {
         return isInnerClass(potentialInnerClass.parent)
     }
 
-    private fun getAction(project: Project, fqdn: String?): AnAction {
+    private fun getAction(project: Project, fqdn: String?, psiElement: PsiElement): AnAction {
         return object : AnAction("Run PIT MutationMate", "Initializes a PiTest run on the selected class", gutterIcon) {
             override fun actionPerformed(e: AnActionEvent) {
-                RunConfigurationActionRunner.updateAndExecuteRunConfig(fqdn, project)
+                RunConfigurationActionRunner.updateAndExecuteRunConfig(fqdn, project, psiElement)
             }
         }
     }

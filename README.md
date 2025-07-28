@@ -51,3 +51,28 @@ Result Visualization: The plugin will provide visualizations of Mutation Testing
 User-Centric Design: The interface and functionality of the plugin will be designed with a strong focus on user experience, ensuring that it is both powerful and easy to use.
 
 By following these steps, we aim to not only enhance PiTest’s functionality within IntelliJ IDE but also empower developers with more efficient, precise, and user-friendly software testing tools, ultimately leading to higher quality software development.
+
+## Setup and how to use
+
+### Install the plugin:
+Open IntelliJ/Android Studio.
+Go to "File" > "Settings" (or press "Ctrl + Alt + S").
+In the left-hand sidebar, navigate to "Plugins".
+Click on the "Marketplace" tab.
+Search for "Pitest IDE Plugin" and install it.
+Restart IntelliJ/Android Studio for the plugin to take effect.
+
+### Configure the plugin:
+After installing the plugin, go to "File" > "Settings" > "Tools" > "Pitest".
+Configure the plugin settings as needed, such as specifying the location of the PiTest installation, selecting the desired mutators, and setting the verbosity level.
+
+### Run a mutation test:
+Open a Java file in your IntelliJ/Android Studio project.
+Place your cursor within a class or method that you want to test.
+Right-click on the class or method and select "Run Mutation Test for 'ClassName'" (or press "Alt + Shift + F10").
+Alternatively, you can use the keyboard shortcut "Ctrl + Shift + F10" to run the mutation test.
+
+### View the results:
+After the mutation test is complete, the results will be displayed in the "Run" tool window.
+You can click on the test name to see the details of the mutation test results, including the number of mutants killed, survived, and timed out.
+The code editor will also display inline annotations indicating the status of each mutation test.

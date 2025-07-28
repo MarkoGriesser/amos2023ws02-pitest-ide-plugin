@@ -1,23 +1,21 @@
-# SPDX-License-Identifier: MIT
-# SPDX-FileCopyrightText: 2023
-
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.27.2 # Use the latest stable version of Gitleaks
     hooks:
-      - id: check-yaml
-      - id: check-json
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-      - id: no-commit-to-branch
-        args: ["--branch", "dev"]
+      - id: gitleaks
+        name: Detect hardcoded secrets in committed changes
+        description: Detect hardcoded secrets in committed changes on the branch
+        entry: gitleaks git -v --log-opts="master.." --config=./gitleaks.toml
+        pass_filenames: false
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.3
-    hooks:
-      - id: prettier
-
-  - repo: https://github.com/fsfe/reuse-tool
-    rev: v2.1.0
-    hooks:
-      - id: reuse
+      - id: gitleaks
+        name: Detect hardcoded secrets in staged files
+        description: Detect hardcoded secrets in staged files
+        entry: gitleaks git -v --staged --config=./gitleaks.toml
+        pass_filenames: false
+        
+      - id: gitleaks
+        name: Detect hardcoded secrets in unstaged files
+        description: Detect hardcoded secrets in staged files
+        entry: gitleaks git -v --pre-commit --config=./gitleaks.toml
+        pass_filenames: false
