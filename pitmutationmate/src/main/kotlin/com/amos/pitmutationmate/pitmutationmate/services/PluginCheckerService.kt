@@ -7,17 +7,12 @@ import com.amos.pitmutationmate.pitmutationmate.plugincheck.PluginCheckData
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import kotlinx.serialization.json.Json
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
-import org.gradle.tooling.model.GradleProject
 import org.gradle.tooling.model.idea.IdeaProject
 import org.jetbrains.kotlin.idea.configuration.isMavenized
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.nio.charset.StandardCharsets
 
-import com.intellij.openapi.externalSystem.model.task.*
 import org.gradle.api.GradleException
 
 @Service(Service.Level.PROJECT)
@@ -129,7 +124,6 @@ class PluginCheckerService(private val project: Project) {
         val projectDir = File(project.basePath ?: "")
         val testFile = File(projectDir, TEST_FILE_NAME)
         isCompanionPluginAvailable = testFile.exists()
-        logger.info("Test file presence: ${if (isCompanionPluginAvailable) "Found" else "Not found"}")
     }
 
     /**

@@ -8,6 +8,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 
 /**
  * A service that generates the path to the report directory.
@@ -79,6 +80,72 @@ class ReportPathGeneratorService(private val project: Project) {
 
     fun setBuildType(buildType: String?) {
         this.buildType = buildType
+    }
+
+    /**
+     * Copies only specific files and directories from the submodule's report directory to the root report directory,
+     * overwriting any existing files in the root report directory.
+     * Only the following are copied: arcmutate-licences (dir), linecoverage.xml, mutations.xml, simplified.json, summary.md
+     */
+    fun overrideRootReportWithSubmodule(submodulePath: String) {
+        val projectBasePath = project.basePath ?: return
+        val submoduleReportDir = Path.of(projectBasePath, submodulePath, "build", "reports", "pitest", "debug")
+        print(submoduleReportDir)
+        val rootReportDir = Path.of(projectBasePath, "build", "reports", "pitest", "pitmutationmate", "debug")
+        print(rootReportDir)
+        if (!Files.exists(submoduleReportDir)) {
+            log.warn("Submodule report directory does not exist: $submoduleReportDir")
+            return
+        }
+        if (!Files.exists(rootReportDir)) {
+            Files.createDirectories(rootReportDir)
+        }
+
+        val allowedNames = setOf(
+            "arcmutate-licences",
+            "linecoverage.xml",
+            "mutations.xml",
+            "simplified.json",
+            "summary.md"
+        )
+
+        Files.list(submoduleReportDir).use { files ->
+            files.forEach { file ->
+                val name = file.fileName.toString()
+                if (allowedNames.contains(name)) {
+                    val target = rootReportDir.resolve(name)
+                    if (Files.isDirectory(file)) {
+                        // Recursively copy directory
+                        copyDirectoryRecursively(file, target)
+                        log.info("Copied directory $file to $target")
+                    } else {
+                        Files.copy(file, target, StandardCopyOption.REPLACE_EXISTING)
+                        log.info("Copied file $file to $target")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Recursively copies a directory from source to target.
+     */
+    private fun copyDirectoryRecursively(source: Path, target: Path) {
+        if (!Files.exists(target)) {
+            Files.createDirectories(target)
+        }
+        Files.walk(source).use { stream ->
+            stream.forEach { src ->
+                val dest = target.resolve(source.relativize(src))
+                if (Files.isDirectory(src)) {
+                    if (!Files.exists(dest)) {
+                        Files.createDirectories(dest)
+                    }
+                } else {
+                    Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+        }
     }
 
     companion object {

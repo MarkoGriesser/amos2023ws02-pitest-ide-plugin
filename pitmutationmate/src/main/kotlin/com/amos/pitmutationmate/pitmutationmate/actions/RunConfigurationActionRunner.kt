@@ -5,17 +5,41 @@ package com.amos.pitmutationmate.pitmutationmate.actions
 
 import com.amos.pitmutationmate.pitmutationmate.configuration.RunConfiguration
 import com.amos.pitmutationmate.pitmutationmate.configuration.RunConfigurationType
+import com.amos.pitmutationmate.pitmutationmate.services.ReportPathGeneratorService
 import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.module.Module
+import com.intellij.openapi.module.ModuleManager
 import com.intellij.psi.PsiElement
 
 object RunConfigurationActionRunner {
     private const val DEFAULT_RUN_CONFIG_NAME = "PITest"
+
+    private fun getActiveBuildVariant(module: Module?): String? {
+        if (module != null) {
+            try {
+                val clazz = Class.forName("com.android.tools.idea.gradle.project.model.AndroidModuleModel")
+                val getMethod = clazz.getMethod("get", Module::class.java)
+                val androidModel = getMethod.invoke(null, module)
+                if (androidModel != null) {
+                    val selectedVariant = androidModel.javaClass.getMethod("getSelectedVariant").invoke(androidModel)
+                    val variantName = selectedVariant?.javaClass?.getMethod("getName")?.invoke(selectedVariant) as? String
+                    if (!variantName.isNullOrBlank()) {
+                        return variantName
+                    }
+                }
+            } catch (e: Exception) {
+                // Android plugin not available or reflection failed
+            }
+        }
+        // Only return "debug" if no variant could be determined
+        return null
+    }
 
     private fun getGradleSubmodulePath(project: Project, psiElement: PsiElement?): Pair<String, String> {
         if (psiElement != null) {
@@ -56,6 +80,8 @@ object RunConfigurationActionRunner {
         val runManager = RunManager.getInstance(project)
 
         val (gradleSubmodulePath, gradleModuleDisplayName) = getGradleSubmodulePath(project, psiElement)
+        val reportPathService = project.getService(ReportPathGeneratorService::class.java)
+//        reportPathService.setGradleSubmodulePath(gradleSubmodulePath)
 
         val runConfigName = DEFAULT_RUN_CONFIG_NAME
         var runConfig = runManager.findConfigurationByName(runConfigName)
@@ -69,7 +95,22 @@ object RunConfigurationActionRunner {
                 // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
                 rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
             }
-            rc.taskName = "$gradleSubmodulePath${if (!gradleSubmodulePath.endsWith(":")) ":" else ""}pitestDebug"
+
+            val module = ModuleManager.getInstance(project)
+                .modules
+                .find { it.name == gradleModuleDisplayName }
+
+            // Get buildVariant from the run configuration
+            val buildVariant = getActiveBuildVariant(module)
+            rc.buildType = buildVariant
+            val pitestTaskName = if (buildVariant.isNullOrBlank()) {
+                "pitestDebug"
+            } else {
+                // Capitalize the first letter of the buildVariant for Gradle task naming
+                val capitalized = buildVariant.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                "pitest${capitalized}"
+            }
+            rc.taskName = "$gradleSubmodulePath${if (!gradleSubmodulePath.endsWith(":")) ":" else ""}$pitestTaskName"
         }
         runManager.addConfiguration(runConfig)
         runManager.selectedConfiguration = runConfig

@@ -48,7 +48,7 @@ intellij {
     plugins.set(listOf(
         "org.jetbrains.kotlin",
         "com.intellij.java",
-        "org.jetbrains.plugins.gradle"
+        "org.jetbrains.plugins.gradle",
     ))
 }
 
