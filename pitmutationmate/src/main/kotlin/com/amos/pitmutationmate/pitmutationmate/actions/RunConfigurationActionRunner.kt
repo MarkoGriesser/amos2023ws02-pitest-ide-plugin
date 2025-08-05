@@ -9,7 +9,6 @@ import com.amos.pitmutationmate.pitmutationmate.services.ReportPathGeneratorServ
 import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
@@ -19,27 +18,6 @@ import com.intellij.psi.PsiElement
 
 object RunConfigurationActionRunner {
     private const val DEFAULT_RUN_CONFIG_NAME = "PITest"
-
-    private fun getActiveBuildVariant(module: Module?): String? {
-        if (module != null) {
-            try {
-                val clazz = Class.forName("com.android.tools.idea.gradle.project.model.AndroidModuleModel")
-                val getMethod = clazz.getMethod("get", Module::class.java)
-                val androidModel = getMethod.invoke(null, module)
-                if (androidModel != null) {
-                    val selectedVariant = androidModel.javaClass.getMethod("getSelectedVariant").invoke(androidModel)
-                    val variantName = selectedVariant?.javaClass?.getMethod("getName")?.invoke(selectedVariant) as? String
-                    if (!variantName.isNullOrBlank()) {
-                        return variantName
-                    }
-                }
-            } catch (e: Exception) {
-                // Android plugin not available or reflection failed
-            }
-        }
-        // Only return "debug" if no variant could be determined
-        return null
-    }
 
     private fun getGradleSubmodulePath(project: Project, psiElement: PsiElement?): Pair<String, String> {
         if (psiElement != null) {
@@ -89,8 +67,8 @@ object RunConfigurationActionRunner {
             runConfig = runManager.createConfiguration(runConfigName, RunConfigurationType::class.java)
             (runConfig.configuration as RunConfiguration).isDefault = true
         }
-        runConfig.configuration.let {
-            val rc = it as RunConfiguration
+        runConfig.configuration.let { config ->
+            val rc = config as RunConfiguration
             if (classFQN != null) {
                 // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
                 rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
@@ -101,7 +79,7 @@ object RunConfigurationActionRunner {
                 .find { it.name == gradleModuleDisplayName }
 
             // Get buildVariant from the run configuration
-            val buildVariant = getActiveBuildVariant(module)
+            val buildVariant = "debug"
             rc.buildType = buildVariant
             val pitestTaskName = if (buildVariant.isNullOrBlank()) {
                 "pitestDebug"
