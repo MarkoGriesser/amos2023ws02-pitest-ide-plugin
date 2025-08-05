@@ -86,6 +86,6 @@ val signingPassword: String? by project
 signing {
     if (signingKey != null && signingPassword != null) {
         useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications)
     }
-    sign(publishing.publications)
 }
