@@ -58,7 +58,7 @@ class PitmutationmateStatusCheckTask extends DefaultTask {
             extension = subproject.extensions.findByName("android")
         }
 
-        if (extension != null) {
+        if (extension != null && extension.hasProperty('buildTypes')) {
             def buildTypes = extension.getProperty('buildTypes')
             if (buildTypes != null) {
                 androidBuildTypes = buildTypes.collect { it.name }
