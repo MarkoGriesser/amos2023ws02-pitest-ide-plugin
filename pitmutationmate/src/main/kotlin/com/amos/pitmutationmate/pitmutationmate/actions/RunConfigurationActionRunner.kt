@@ -58,8 +58,6 @@ object RunConfigurationActionRunner {
         val runManager = RunManager.getInstance(project)
 
         val (gradleSubmodulePath, gradleModuleDisplayName) = getGradleSubmodulePath(project, psiElement)
-        val reportPathService = project.getService(ReportPathGeneratorService::class.java)
-//        reportPathService.setGradleSubmodulePath(gradleSubmodulePath)
 
         val runConfigName = DEFAULT_RUN_CONFIG_NAME
         var runConfig = runManager.findConfigurationByName(runConfigName)
@@ -79,8 +77,7 @@ object RunConfigurationActionRunner {
                 .find { it.name == gradleModuleDisplayName }
 
             // Get buildVariant from the run configuration
-            val buildVariant = "debug"
-            rc.buildType = buildVariant
+            val buildVariant = rc.buildType
             val pitestTaskName = if (buildVariant.isNullOrBlank()) {
                 "pitestDebug"
             } else {

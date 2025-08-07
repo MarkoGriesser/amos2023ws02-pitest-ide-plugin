@@ -43,12 +43,7 @@ class DependencyInclusionStrategy implements OverrideStrategy {
                 project.dependencies.add(PITEST_EXTENSION, overrideValue)
                 isApplied = true
             } else if (androidPitestPlugin != null) {
-                log.debug("Adding dependency for detected Pitest Plugin $PITEST_PLUGIN_ANDROID")
-                project.subprojects {
-                    buildscript {
-                        dependencies.add(PITEST_EXTENSION, overrideValue)
-                    }
-                }
+                project.buildscript.dependencies.add(PITEST_EXTENSION, overrideValue)
                 isApplied = true
             } else {
                 log.info('No Pitest Plugin detected')
