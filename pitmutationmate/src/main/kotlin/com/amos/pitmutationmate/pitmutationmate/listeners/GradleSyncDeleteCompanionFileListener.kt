@@ -2,11 +2,11 @@ package com.amos.pitmutationmate.pitmutationmate.listeners
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.externalSystem.service.notification.ExternalSystemProgressNotificationManager
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskNotificationListener
+import com.intellij.openapi.startup.ProjectActivity
 import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.File
 
@@ -14,9 +14,9 @@ import java.io.File
  * Listens for Gradle sync events and deletes the COMPANION_IS_PRESENT marker file
  * if the override plugin is not present in the root build.gradle.kts.
  */
-class GradleSyncDeleteCompanionFileListener : StartupActivity {
+class GradleSyncDeleteCompanionFileListener : ProjectActivity {
 
-    override fun runActivity(project: Project) {
+    override suspend fun execute(project: Project) {
         val notificationManager = project.getService(ExternalSystemProgressNotificationManager::class.java)
         notificationManager.addNotificationListener(object : ExternalSystemTaskNotificationListener {
             override fun onStart(id: ExternalSystemTaskId, workingDir: String?) {
@@ -41,7 +41,6 @@ class GradleSyncDeleteCompanionFileListener : StartupActivity {
     }
 
     private fun checkAndDeleteCompanionFile(project: Project) {
-        val logger = Logger.getInstance(GradleSyncDeleteCompanionFileListener::class.java)
         val projectDir = project.basePath ?: return
         val buildGradleKts = File(projectDir, "build.gradle.kts")
         val markerFile = File(projectDir, "COMPANION_IS_PRESENT")
@@ -49,14 +48,16 @@ class GradleSyncDeleteCompanionFileListener : StartupActivity {
 
         if (buildGradleKts.exists()) {
             val buildFileText = buildGradleKts.readText()
-            val pluginPresent = buildFileText.contains(pluginId)
+
+            // Remove block comments (/* ... */) and line comments (// ...)
+            val noBlockComments = buildFileText.replace(Regex("/\\*.*?\\*/", RegexOption.DOT_MATCHES_ALL), "")
+            val noComments = noBlockComments.replace(Regex("//.*?$", setOf(RegexOption.MULTILINE)), "")
+
+            // Now search for the pluginId in the uncommented code
+            val pluginPresent = Regex("""\b$pluginId\b""").containsMatchIn(noComments)
+
             if (!pluginPresent && markerFile.exists()) {
-                val deleted = markerFile.delete()
-                if (deleted) {
-                    logger.info("Deleted marker file: ${markerFile.absolutePath} because override plugin is not present in build.gradle.kts.")
-                } else {
-                    logger.warn("Failed to delete marker file: ${markerFile.absolutePath}")
-                }
+                markerFile.delete()
             }
         }
     }
