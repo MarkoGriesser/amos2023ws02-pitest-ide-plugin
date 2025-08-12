@@ -52,7 +52,7 @@
         <externalAnnotator language=""
                            implementationClass="com.amos.pitmutationmate.pitmutationmate.editor.MutationsAnnotator"/>
         <postStartupActivity implementation="com.amos.pitmutationmate.pitmutationmate.activity.LaunchActivity" />
-
+        <postStartupActivity implementation="com.amos.pitmutationmate.pitmutationmate.listeners.GradleSyncDeleteCompanionFileListener" />
     </extensions>
     <actions>
         <action id="com.amos.pitmutationmate.pitmutationmate.actions.ToolMenuAction"
@@ -74,12 +74,6 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
         </action>
-<!--        <action id="com.amos.pitmutationmate.OverrideReportAction"-->
-<!--                class="com.amos.pitmutationmate.pitmutationmate.actions.OverrideReportAction"-->
-<!--                text="Override Report"-->
-<!--                description="Copies specific files from the submodule's report directory to the root report directory">-->
-<!--            <add-to-group group-id="EditorPopupMenu" anchor="last"/>-->
-<!--        </action>-->
     </actions>
 
 </idea-plugin>
