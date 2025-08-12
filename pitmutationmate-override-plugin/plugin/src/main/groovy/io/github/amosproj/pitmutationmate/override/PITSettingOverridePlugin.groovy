@@ -28,6 +28,11 @@ class PITSettingOverridePlugin implements Plugin<Project> {
     private final static String TEST_FILE_NAME = 'COMPANION_IS_PRESENT'
 
     void apply(Project project) {
+        project.gradle.projectsEvaluated {
+            def worksFile = new File(project.rootDir, TEST_FILE_NAME)
+            worksFile.text = "Plugin version: ${project.version}\n"
+            log.info("Created '$TEST_FILE_NAME' file.")
+        }
         project.tasks.register(PitmutationmateStatusCheckTask.TASK_NAME, PitmutationmateStatusCheckTask)
 
         OverrideReader overrideReader = new SystemPropertyOverrideReader()
