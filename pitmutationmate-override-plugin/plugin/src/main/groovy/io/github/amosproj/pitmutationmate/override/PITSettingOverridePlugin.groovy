@@ -14,6 +14,7 @@ import io.github.amosproj.pitmutationmate.override.strategy.PitestPropertyOverri
 import io.github.amosproj.pitmutationmate.override.tasks.PitmutationmateStatusCheckTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.UnknownConfigurationException
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
@@ -61,10 +62,17 @@ class PITSettingOverridePlugin implements Plugin<Project> {
                     } else {
                         strategy = new PitestPropertyOverrideStrategy()
                     }
-                    strategy.apply(project, propertyName, overrideValue)
-                    if (messagingService != null) {
-                        messagingService.sendMessage(
-                            "Property '$propertyName' with '$overrideValue' successfully overwritten.")
+                    try {
+                        strategy.apply(project, propertyName, overrideValue)
+                        if (messagingService != null) {
+                            messagingService.sendMessage(
+                                "Property '$propertyName' with '$overrideValue' successfully overwritten.")
+                        }
+                    } catch (UnknownConfigurationException e) {
+                        log.error("Unknown configuration for property '$propertyName': ${e.message}", e)
+                        if (messagingService != null) {
+                            messagingService.sendMessage("Unknown configuration for property '$propertyName': ${uce.message}")
+                        }
                     }
                 }
             } catch (Exception e) {

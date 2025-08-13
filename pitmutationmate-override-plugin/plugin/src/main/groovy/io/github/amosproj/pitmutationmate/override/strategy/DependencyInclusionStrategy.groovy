@@ -40,19 +40,31 @@ class DependencyInclusionStrategy implements OverrideStrategy {
 
             if (pitestPlugin != null) {
                 log.debug("Adding dependency for detected Pitest Plugin $PITEST_PLUGIN")
-                project.dependencies.add(PITEST_EXTENSION, overrideValue)
-                isApplied = true
+                def pitestConfig = project.configurations.findByName(PITEST_EXTENSION)
+                if (pitestConfig != null) {
+                    project.dependencies.add(PITEST_EXTENSION, overrideValue)
+                    isApplied = true
+                    log.info("Successfully added dependency '$overrideValue' to project ${project.name}.")
+                } else {
+                    log.warn("Configuration '$PITEST_EXTENSION' does not exist in project ${project.name}. Skipping dependency addition.")
+                }
             } else if (androidPitestPlugin != null) {
-                project.buildscript.dependencies.add(PITEST_EXTENSION, overrideValue)
-                isApplied = true
+                // For Android, check buildscript configurations
+                def pitestConfig = project.buildscript.configurations.findByName(PITEST_EXTENSION)
+                if (pitestConfig != null) {
+                    project.buildscript.dependencies.add(PITEST_EXTENSION, overrideValue)
+                    isApplied = true
+                    log.info("Successfully added dependency '$overrideValue' to buildscript of project ${project.name}.")
+                } else {
+                    log.warn("Configuration '$PITEST_EXTENSION' does not exist in buildscript of project ${project.name}. Skipping dependency addition.")
+                }
             } else {
                 log.info('No Pitest Plugin detected')
                 return
             }
-            log.info("Successfully added dependency '$overrideValue' to project ${project.name}.")
         }
         if (!isApplied) {
-            throw new GradleException('PITest plugin not found. Please apply the PITest plugin first.')
+            throw new GradleException('PITest plugin not found or configuration missing. Please apply the PITest plugin first.')
         }
     }
 
