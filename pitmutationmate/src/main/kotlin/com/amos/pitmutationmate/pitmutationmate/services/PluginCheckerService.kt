@@ -4,6 +4,9 @@
 package com.amos.pitmutationmate.pitmutationmate.services
 
 import com.amos.pitmutationmate.pitmutationmate.plugincheck.PluginCheckData
+import com.amos.pitmutationmate.pitmutationmate.ui.ToolWindowFactory
+import com.amos.pitmutationmate.pitmutationmate.visualization.PiTestReports
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -67,6 +70,19 @@ class PluginCheckerService(private val project: Project) {
 
     fun crashBuild() {
         if (!isCompanionPluginAvailable) {
+            // Clear the reports table and update the UI
+            ApplicationManager.getApplication().invokeLater {
+                val toolWindow = com.intellij.openapi.wm.ToolWindowManager.getInstance(project).getToolWindow(com.amos.pitmutationmate.pitmutationmate.ui.ToolWindowFactory.ID)
+                val reportContent = toolWindow?.contentManager?.findContent(PiTestReports.TITLE)
+                val reportPanel = reportContent?.component
+                if (reportPanel is PiTestReports) {
+                    reportPanel.deleteReports()
+                    reportPanel.visualizeReports()
+                }
+                ToolWindowFactory.Util.updateReport(project, null)
+                ToolWindowFactory.Util.updateTree(project)
+                ToolWindowFactory.Util.updateHistory(project)
+            }
             throw GradleException("Override plugin is missing!")
         }
     }
