@@ -1,7 +1,6 @@
 package com.amos.pitmutationmate.pitmutationmate.listeners
 
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import com.intellij.openapi.externalSystem.service.notification.ExternalSystemProgressNotificationManager
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskId
 import com.intellij.openapi.externalSystem.model.task.ExternalSystemTaskType
@@ -11,7 +10,7 @@ import org.jetbrains.plugins.gradle.util.GradleConstants
 import java.io.File
 
 /**
- * Listens for Gradle sync events and deletes the COMPANION_IS_PRESENT marker file
+ * Listens for Gradle sync events and deletes the marker file
  * if the override plugin is not present in the root build.gradle.kts.
  */
 class GradleSyncDeleteCompanionFileListener : ProjectActivity {
@@ -43,7 +42,7 @@ class GradleSyncDeleteCompanionFileListener : ProjectActivity {
     private fun checkAndDeleteCompanionFile(project: Project) {
         val projectDir = project.basePath ?: return
         val buildGradleKts = File(projectDir, "build.gradle.kts")
-        val markerFile = File(projectDir, "COMPANION_IS_PRESENT")
+        val markerFile = File(projectDir, ".pitmutationmate_companion_present")
         val pluginId = "io.github.amos-pitmutationmate.pitmutationmate.override"
 
         if (buildGradleKts.exists()) {

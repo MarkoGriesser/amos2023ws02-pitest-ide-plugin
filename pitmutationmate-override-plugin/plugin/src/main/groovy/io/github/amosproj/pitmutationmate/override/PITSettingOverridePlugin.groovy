@@ -26,7 +26,7 @@ class PITSettingOverridePlugin implements Plugin<Project> {
     @SuppressWarnings('FieldName')
     private final static Logger log = Logging.getLogger(PITSettingOverridePlugin)
     private final static String PORT_PROPERTY_NAME = 'port'
-    private final static String TEST_FILE_NAME = 'COMPANION_IS_PRESENT'
+    private final static String TEST_FILE_NAME = '.pitmutationmate_companion_present'
 
     void apply(Project project) {
         project.gradle.projectsEvaluated {

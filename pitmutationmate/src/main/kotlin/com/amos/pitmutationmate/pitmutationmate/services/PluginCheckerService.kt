@@ -27,7 +27,7 @@ class PluginCheckerService(private val project: Project) {
     private var testDirectories = mutableListOf<File>()
     private var sourceDirectories = mutableListOf<File>()
 
-    private val TEST_FILE_NAME = "COMPANION_IS_PRESENT"
+    private val TEST_FILE_NAME = ".pitmutationmate_companion_present"
 
     /**
      * Check if the companion plugin is available and if the pitest plugin is applied

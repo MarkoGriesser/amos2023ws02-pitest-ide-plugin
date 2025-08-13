@@ -20,12 +20,12 @@ class GradleSyncDeleteCompanionFileListenerTest {
     }
 
     @Test
-    fun `should delete COMPANION_IS_PRESENT marker file when override plugin is not present in build_gradle_kts`() {
+    fun `should delete marker file when override plugin is not present in build_gradle_kts`() {
         // Setup temp project directory using createTempDirectory (Path API)
         val tempDirPath = createTempDirectory("pitmutationmate-test")
         val tempDir = tempDirPath.toFile()
         val buildGradleKts = File(tempDir, "build.gradle.kts")
-        val markerFile = File(tempDir, "COMPANION_IS_PRESENT")
+        val markerFile = File(tempDir, ".pitmutationmate_companion_present")
 
         // Write build.gradle.kts without the override plugin
         buildGradleKts.writeText(
@@ -58,12 +58,12 @@ class GradleSyncDeleteCompanionFileListenerTest {
     }
 
     @Test
-    fun `should NOT delete COMPANION_IS_PRESENT marker file when override plugin IS present in build_gradle_kts`() {
+    fun `should NOT delete marker file when override plugin IS present in build_gradle_kts`() {
         // Setup temp project directory using createTempDirectory (Path API)
         val tempDirPath = createTempDirectory("pitmutationmate-test")
         val tempDir = tempDirPath.toFile()
         val buildGradleKts = File(tempDir, "build.gradle.kts")
-        val markerFile = File(tempDir, "COMPANION_IS_PRESENT")
+        val markerFile = File(tempDir, ".pitmutationmate_companion_present")
 
         // Write build.gradle.kts WITH the override plugin
         buildGradleKts.writeText(
@@ -115,7 +115,7 @@ class GradleSyncDeleteCompanionFileListenerTest {
         method.isAccessible = true
         method.invoke(listener, project)
         // Assert marker file still does not exist
-        Assertions.assertFalse(File(tempDir, "COMPANION_IS_PRESENT").exists())
+        Assertions.assertFalse(File(tempDir, ".pitmutationmate_companion_present").exists())
         buildGradleKts.delete()
         tempDir.deleteRecursively()
     }
@@ -125,7 +125,7 @@ class GradleSyncDeleteCompanionFileListenerTest {
         val tempDirPath = createTempDirectory("pitmutationmate-test")
         val tempDir = tempDirPath.toFile()
         val buildGradleKts = File(tempDir, "build.gradle.kts")
-        val markerFile = File(tempDir, "COMPANION_IS_PRESENT")
+        val markerFile = File(tempDir, ".pitmutationmate_companion_present")
 
         // Write build.gradle.kts without the override plugin
         buildGradleKts.writeText(
@@ -162,11 +162,11 @@ class GradleSyncDeleteCompanionFileListenerTest {
     }
 
     @Test
-    fun `should delete COMPANION_IS_PRESENT marker file when override plugin is only present in a comment`() {
+    fun `should delete marker file when override plugin is only present in a comment`() {
         val tempDirPath = createTempDirectory("pitmutationmate-test")
         val tempDir = tempDirPath.toFile()
         val buildGradleKts = File(tempDir, "build.gradle.kts")
-        val markerFile = File(tempDir, "COMPANION_IS_PRESENT")
+        val markerFile = File(tempDir, ".pitmutationmate_companion_present")
 
         // Write build.gradle.kts with the plugin id only in a comment
         buildGradleKts.writeText(
