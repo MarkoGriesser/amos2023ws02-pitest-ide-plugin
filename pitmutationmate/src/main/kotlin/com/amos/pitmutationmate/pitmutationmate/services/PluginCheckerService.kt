@@ -10,13 +10,12 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import org.gradle.api.GradleException
 import org.gradle.tooling.GradleConnector
 import org.gradle.tooling.ProjectConnection
 import org.gradle.tooling.model.idea.IdeaProject
 import org.jetbrains.kotlin.idea.configuration.isMavenized
 import java.io.File
-
-import org.gradle.api.GradleException
 
 @Service(Service.Level.PROJECT)
 class PluginCheckerService(private val project: Project) {
@@ -72,7 +71,7 @@ class PluginCheckerService(private val project: Project) {
         if (!isCompanionPluginAvailable) {
             // Clear the reports table and update the UI
             ApplicationManager.getApplication().invokeLater {
-                val toolWindow = com.intellij.openapi.wm.ToolWindowManager.getInstance(project).getToolWindow(com.amos.pitmutationmate.pitmutationmate.ui.ToolWindowFactory.ID)
+                val toolWindow = com.intellij.openapi.wm.ToolWindowManager.getInstance(project).getToolWindow(ToolWindowFactory.ID)
                 val reportContent = toolWindow?.contentManager?.findContent(PiTestReports.TITLE)
                 val reportPanel = reportContent?.component
                 if (reportPanel is PiTestReports) {

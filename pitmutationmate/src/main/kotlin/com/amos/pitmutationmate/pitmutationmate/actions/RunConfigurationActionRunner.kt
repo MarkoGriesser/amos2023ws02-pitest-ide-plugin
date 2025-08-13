@@ -5,7 +5,6 @@ package com.amos.pitmutationmate.pitmutationmate.actions
 
 import com.amos.pitmutationmate.pitmutationmate.configuration.RunConfiguration
 import com.amos.pitmutationmate.pitmutationmate.configuration.RunConfigurationType
-import com.amos.pitmutationmate.pitmutationmate.services.ReportPathGeneratorService
 import com.intellij.execution.ExecutorRegistry
 import com.intellij.execution.ProgramRunnerUtil
 import com.intellij.execution.RunManager
@@ -13,7 +12,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.module.Module
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.psi.PsiElement
 
 object RunConfigurationActionRunner {
@@ -57,7 +55,7 @@ object RunConfigurationActionRunner {
         val executor = ExecutorRegistry.getInstance().getExecutorById("Run")
         val runManager = RunManager.getInstance(project)
 
-        val (gradleSubmodulePath, gradleModuleDisplayName) = getGradleSubmodulePath(project, psiElement)
+        val (gradleSubmodulePath, _) = getGradleSubmodulePath(project, psiElement)
 
         val runConfigName = DEFAULT_RUN_CONFIG_NAME
         var runConfig = runManager.findConfigurationByName(runConfigName)
@@ -71,10 +69,6 @@ object RunConfigurationActionRunner {
                 // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
                 rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
             }
-
-            val module = ModuleManager.getInstance(project)
-                .modules
-                .find { it.name == gradleModuleDisplayName }
 
             // Get buildVariant from the run configuration
             val buildVariant = rc.buildType

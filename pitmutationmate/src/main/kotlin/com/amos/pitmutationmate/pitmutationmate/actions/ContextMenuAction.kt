@@ -17,6 +17,7 @@ import com.intellij.psi.PsiClassOwner
 import com.intellij.psi.PsiDirectory
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.amos.pitmutationmate.pitmutationmate.services.PluginCheckerService
 import org.jetbrains.kotlin.psi.KtClass
 import java.io.File
 
@@ -109,7 +110,23 @@ class ContextMenuAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        e.presentation.isEnabled = shouldEnablePitRun(e)
+        val project = e.project
+        if (project == null) {
+            e.presentation.isEnabledAndVisible = false
+            return
+        }
+
+        // Check plugin status using PluginCheckerService
+        val pluginChecker = project.service<PluginCheckerService>()
+        pluginChecker.checkPlugins()
+        val errorMessage = pluginChecker.getErrorMessage(withHeader = false)
+        if (errorMessage != null) {
+            e.presentation.isEnabledAndVisible = false
+            return
+        }
+
+        // Existing logic to determine if PIT run should be enabled
+        e.presentation.isEnabledAndVisible = shouldEnablePitRun(e)
     }
 
     override fun getActionUpdateThread(): ActionUpdateThread {

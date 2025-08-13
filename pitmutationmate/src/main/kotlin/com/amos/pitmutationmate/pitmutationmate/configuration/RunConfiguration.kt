@@ -19,12 +19,9 @@ import com.intellij.execution.process.ProcessHandler
 import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.externalSystem.ExternalSystemModulePropertyManager
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.wm.ToolWindowManager
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.kotlin.idea.configuration.isMavenized
