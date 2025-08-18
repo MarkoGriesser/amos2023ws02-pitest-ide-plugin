@@ -6,6 +6,7 @@ package com.amos.pitmutationmate.pitmutationmate.services
 import com.amos.pitmutationmate.pitmutationmate.plugincheck.PluginCheckData
 import com.amos.pitmutationmate.pitmutationmate.ui.ToolWindowFactory
 import com.amos.pitmutationmate.pitmutationmate.visualization.PiTestReports
+import com.amos.pitmutationmate.pitmutationmate.visualization.treestructure.PackageBreakdownTable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger
@@ -67,9 +68,21 @@ class PluginCheckerService(private val project: Project) {
         }
     }
 
+    /**
+     * Handles the scenario where the required companion plugin is missing from the project.
+     *
+     * This function checks if the companion plugin is available. If it is not, it performs the following actions:
+     * - Clears the reports table and updates the UI to reflect the missing plugin.
+     * - Clears the package breakdown tab.
+     * - Updates the report, tree, and history in the tool window.
+     * - Displays an error dialog to the user indicating that the override plugin is missing and must be added to the build file.
+     * - Throws a [GradleException] to halt further processing.
+     *
+     * @throws GradleException if the companion plugin is not available, indicating that the build process should be stopped.
+     * @return Unit. This function does not return a value but will throw an exception if the plugin is missing.
+     */
     fun crashBuild() {
         if (!isCompanionPluginAvailable) {
-            // Clear the reports table and update the UI
             ApplicationManager.getApplication().invokeLater {
                 val toolWindow = com.intellij.openapi.wm.ToolWindowManager.getInstance(project).getToolWindow(ToolWindowFactory.ID)
                 val reportContent = toolWindow?.contentManager?.findContent(PiTestReports.TITLE)
@@ -78,10 +91,24 @@ class PluginCheckerService(private val project: Project) {
                     reportPanel.deleteReports()
                     reportPanel.visualizeReports()
                 }
+                val packageBreakdownContent = toolWindow?.contentManager?.findContent("Package Breakdown")
+                val packageBreakdownPanel = packageBreakdownContent?.component
+                if (packageBreakdownPanel is PackageBreakdownTable) {
+                    packageBreakdownPanel.removeAll()
+                    packageBreakdownPanel.revalidate()
+                    packageBreakdownPanel.repaint()
+                }
                 ToolWindowFactory.Util.updateReport(project, null)
                 ToolWindowFactory.Util.updateTree(project)
                 ToolWindowFactory.Util.updateHistory(project)
+
+                com.intellij.openapi.ui.Messages.showErrorDialog(
+                    project,
+                    "Override plugin is missing! Please add the required plugin to your build file.",
+                    "PIT MutationMate"
+                )
             }
+
             throw GradleException("Override plugin is missing!")
         }
     }
