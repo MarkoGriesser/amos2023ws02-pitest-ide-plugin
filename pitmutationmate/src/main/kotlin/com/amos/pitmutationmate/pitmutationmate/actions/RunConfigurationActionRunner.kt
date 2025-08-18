@@ -33,7 +33,6 @@ object RunConfigurationActionRunner {
                         // Only use the first directory after the project root as the gradle submodule
                         val relative = contentRootPath.removePrefix(projectBasePath).trimStart('/', '\\')
                         if (relative.isNotEmpty()) {
-                            // Split the relative path and take only the first directory as the submodule
                             val parts = relative.split("[/\\\\]".toRegex()).filter { it.isNotEmpty() }
                             if (parts.isNotEmpty()) {
                                 val gradlePath = ":" + parts[0]
@@ -66,17 +65,22 @@ object RunConfigurationActionRunner {
         runConfig.configuration.let { config ->
             val rc = config as RunConfiguration
             if (classFQN != null) {
-                // Adds a star at the end of each ClassFQN so every inner class is included in the pitest task
                 rc.classFQN = classFQN.split(",").joinToString(separator = ",") { classIt -> "$classIt*" }
             }
 
-            // Get buildVariant from the run configuration
-            val buildVariant = rc.buildType
-            val pitestTaskName = if (buildVariant.isNullOrBlank()) {
+            val taskName = rc.taskName?.takeIf { it.isNotBlank() } ?: run {
+                val defaultTask = "$gradleSubmodulePath${if (!gradleSubmodulePath.endsWith(":")) ":" else ""}pitestDebug"
+                rc.taskName = defaultTask
+                defaultTask
+            }
+
+            val buildVariant = Regex("pitest([A-Z][a-zA-Z0-9]*)$").find(taskName)?.groupValues?.get(1)?.replaceFirstChar { it.lowercase() }
+            rc.buildType = buildVariant
+
+            val pitestTaskName = if (rc.buildType.isNullOrBlank()) {
                 "pitestDebug"
             } else {
-                // Capitalize the first letter of the buildVariant for Gradle task naming
-                val capitalized = buildVariant.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                val capitalized = rc.buildType!!.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                 "pitest${capitalized}"
             }
             rc.taskName = "$gradleSubmodulePath${if (!gradleSubmodulePath.endsWith(":")) ":" else ""}$pitestTaskName"
