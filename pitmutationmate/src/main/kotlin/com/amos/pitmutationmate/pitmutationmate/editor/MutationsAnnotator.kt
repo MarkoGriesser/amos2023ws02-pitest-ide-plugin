@@ -37,10 +37,45 @@ class MutationsAnnotator :
         }
 
         fun getMessage(mutationResults: List<XMLParser.MutationResult>, isTooltip: Boolean): String {
-            // TODO: add icon, link mutation result and improve formatting
+            // Add icon, link mutation result, and improve formatting
             val separator = if (isTooltip) "<br/>" else ", "
-            return mutationResults.mapIndexed { index, it -> "${index + 1}. ${it.description} → ${it.status}" }
-                .joinToString(separator)
+            return mutationResults.mapIndexed { index, elem ->
+                val iconHtml = if (isTooltip) {
+                    // Use Unicode icons for tooltip, or you could use <img> with a resource path if available
+                    when (elem.status) {
+                        "KILLED" -> "&#x2714;" // check mark
+                        "SURVIVED" -> "&#x26A0;" // warning
+                        "TIMED_OUT" -> "&#x23F1;" // clock
+                        else -> "&#x25CF;" // bullet
+                    }
+                } else {
+                    // For inline, just use a short symbol
+                    when (elem.status) {
+                        "KILLED" -> "✔"
+                        "SURVIVED" -> "⚠"
+                        "TIMED_OUT" -> "⏱"
+                        else -> "•"
+                    }
+                }
+
+                val description = elem.description
+                val status = elem.status
+
+                // If possible, link to the killing test (if present and in tooltip mode)
+                val killingTestLink = if (isTooltip && elem.killingTest.isNotBlank()) {
+                    // Not a real hyperlink, but format as code for now
+                    "<br/><b>Killing Test:</b> <code>${elem.killingTest}</code>"
+                } else {
+                    ""
+                }
+
+                // Format: [icon] 1. description → status [killing test]
+                if (isTooltip) {
+                    """$iconHtml <b>${index + 1}.</b> ${description} <b>→</b> <span style="color:gray;">$status</span>$killingTestLink"""
+                } else {
+                    "$iconHtml ${index + 1}. $description → $status"
+                }
+            }.joinToString(separator)
         }
 
         fun formatTooltipMessage(message: String): String {
@@ -87,13 +122,12 @@ class MutationsAnnotator :
         val document: Document = PsiDocumentManager.getInstance(file.project).getDocument(file) ?: return
 
         for (r in annotationResult) {
-            var lineRange: TextRange
-            try {
-                lineRange = Util.getContentOffset(document, r.key - 1)
-            } catch (e: IndexOutOfBoundsException) {
+            val lineIndex = r.key - 1
+            if (lineIndex < 0 || lineIndex >= document.lineCount) {
                 log.warn("Line number ${r.key} is out of bounds")
                 continue
             }
+            val lineRange = Util.getContentOffset(document, lineIndex)
             val severity = PitestSeverity.fromMutationResults(r.value)
             holder.newAnnotation(
                 severity.highlightSeverity(),

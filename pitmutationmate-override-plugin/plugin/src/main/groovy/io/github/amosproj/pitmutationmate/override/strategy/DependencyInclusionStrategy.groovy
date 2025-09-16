@@ -40,7 +40,7 @@ class DependencyInclusionStrategy implements OverrideStrategy {
 
             if (pitestPlugin != null) {
                 log.debug("Adding dependency for detected Pitest Plugin $PITEST_PLUGIN")
-                def pitestConfig = project.configurations.findByName(PITEST_EXTENSION)
+                def pitestConfig = project.configurations.named(PITEST_EXTENSION)
                 if (pitestConfig != null) {
                     project.dependencies.add(PITEST_EXTENSION, overrideValue)
                     isApplied = true
@@ -50,7 +50,7 @@ class DependencyInclusionStrategy implements OverrideStrategy {
                 }
             } else if (androidPitestPlugin != null) {
                 // For Android, check buildscript configurations
-                def pitestConfig = project.buildscript.configurations.findByName(PITEST_EXTENSION)
+                def pitestConfig = project.buildscript.configurations.named(PITEST_EXTENSION)
                 if (pitestConfig != null) {
                     project.buildscript.dependencies.add(PITEST_EXTENSION, overrideValue)
                     isApplied = true

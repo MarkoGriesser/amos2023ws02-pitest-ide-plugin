@@ -8,11 +8,9 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 
-class Utils {
-    companion object {
-        fun getPsiFileFromPath(project: Project, filePath: String): PsiFile? {
-            return LocalFileSystem.getInstance().findFileByPath(filePath)
-                ?.let { PsiManager.getInstance(project).findFile(it) }
-        }
+object Utils {
+    fun getPsiFileFromPath(project: Project, filePath: String): PsiFile? {
+        return LocalFileSystem.getInstance().findFileByPath(filePath)
+            ?.let { PsiManager.getInstance(project).findFile(it) }
     }
 }

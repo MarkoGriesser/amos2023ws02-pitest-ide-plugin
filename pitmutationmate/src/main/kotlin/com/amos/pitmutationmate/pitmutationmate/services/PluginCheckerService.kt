@@ -28,7 +28,7 @@ class PluginCheckerService(private val project: Project) {
     private var testDirectories = mutableListOf<File>()
     private var sourceDirectories = mutableListOf<File>()
 
-    private val TEST_FILE_NAME = ".pitmutationmate_companion_present"
+    private val markerFile = ".pitmutationmate_companion_present"
 
     /**
      * Check if the companion plugin is available and if the pitest plugin is applied
@@ -164,7 +164,7 @@ class PluginCheckerService(private val project: Project) {
 
     private fun checkTestFilePresence() {
         val projectDir = File(project.basePath ?: "")
-        val testFile = File(projectDir, TEST_FILE_NAME)
+        val testFile = File(projectDir, markerFile)
         isCompanionPluginAvailable = testFile.exists()
     }
 
@@ -242,6 +242,8 @@ class PluginCheckerService(private val project: Project) {
      *
      * @return A list containing the build file, the pitest plugin name and the plugin URL
      */
+
+    // using this currently leads to the plugin failing to load
     private fun getPitestPluginName(): List<String> {
         val isAndroid = pluginCheckData?.androidPluginApplied ?: false
         val buildFile = getBuildFileName()

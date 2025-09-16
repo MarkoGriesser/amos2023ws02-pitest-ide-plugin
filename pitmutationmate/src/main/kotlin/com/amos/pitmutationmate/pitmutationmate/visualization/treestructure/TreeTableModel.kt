@@ -12,14 +12,14 @@ import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreePath
 
 class TreeTableModel(@JvmField var rootNode: DataNode) : TreeTableModel {
-    protected var listenerList = EventListenerList()
+    private var listenerList = EventListenerList()
 
     override fun getRoot(): Any {
         return rootNode
     }
 
-    override fun getChild(parent: Any, index: Int): DataNode? {
-        return (parent as DataNode).children?.get(index)
+    override fun getChild(parent: Any, index: Int): DataNode {
+        return (parent as DataNode).children[index]
     }
 
     override fun getChildCount(parent: Any): Int {
@@ -30,8 +30,7 @@ class TreeTableModel(@JvmField var rootNode: DataNode) : TreeTableModel {
         return getChildCount(node) == 0
     }
 
-    override fun valueForPathChanged(path: TreePath?, newValue: Any?) {
-    }
+    override fun valueForPathChanged(path: TreePath?, newValue: Any?) {}
 
     // This method should not be used.
     override fun getIndexOfChild(parent: Any?, child: Any?): Int {
@@ -50,10 +49,9 @@ class TreeTableModel(@JvmField var rootNode: DataNode) : TreeTableModel {
         return columnNames.size
     }
 
-    override fun setTree(tree: JTree?) {
-    }
+    override fun setTree(tree: JTree?) {}
 
-    override fun getColumnName(column: Int): String? {
+    override fun getColumnName(column: Int): String {
         return columnNames[column]
     }
 
@@ -62,15 +60,15 @@ class TreeTableModel(@JvmField var rootNode: DataNode) : TreeTableModel {
     }
 
     override fun getValueAt(node: Any?, column: Int): Any? {
-        when (column) {
-            0 -> return (node as DataNode?)?.name
-            1 -> return (node as DataNode?)?.nbClasses
-            2 -> return (node as DataNode?)?.lineCoverage
-            3 -> return (node as DataNode?)?.mutationCoverage
-            4 -> return (node as DataNode?)?.testStrength
-            else -> {}
+        val dataNode = node as? DataNode ?: return null
+        return when (column) {
+            0 -> dataNode.name
+            1 -> dataNode.nbClasses
+            2 -> dataNode.lineCoverage
+            3 -> dataNode.mutationCoverage
+            4 -> dataNode.testStrength
+            else -> null
         }
-        return null
     }
 
     override fun isCellEditable(node: Any?, column: Int): Boolean {
@@ -103,19 +101,7 @@ class TreeTableModel(@JvmField var rootNode: DataNode) : TreeTableModel {
         }
     }
 
-    protected fun fireTreeNodesChanged(source: Any, path: Array<Any>, childIndices: IntArray, children: Array<Any>) {
-        fireTreeNode(CHANGED, source, path, childIndices, children)
-    }
-
-    protected fun fireTreeNodesInserted(source: Any, path: Array<Any>, childIndices: IntArray, children: Array<Any>) {
-        fireTreeNode(INSERTED, source, path, childIndices, children)
-    }
-
-    protected fun fireTreeNodesRemoved(source: Any, path: Array<Any>, childIndices: IntArray, children: Array<Any>) {
-        fireTreeNode(REMOVED, source, path, childIndices, children)
-    }
-
-    protected fun fireTreeStructureChanged(
+    private fun fireTreeStructureChanged(
         source: Any,
         path: Array<Any>,
         childIndices: IntArray,

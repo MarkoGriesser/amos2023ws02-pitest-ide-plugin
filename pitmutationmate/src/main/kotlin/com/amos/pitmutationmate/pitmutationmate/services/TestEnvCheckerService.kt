@@ -18,24 +18,18 @@ import java.io.File
 class TestEnvCheckerService(private val project: Project) {
 
     fun isTestFile(file: File): Boolean {
-        if (project.service<PluginCheckerService>().getTestDirectories().isEmpty()) {
+        val testDirs = project.service<PluginCheckerService>().getTestDirectories()
+        val isTest: Boolean
+
+        if (testDirs.isEmpty()) {
             val psiFile = Utils.getPsiFileFromPath(project, file.path)
             val psiClasses = (psiFile as PsiClassOwner).classes
-
-            for (psiClass in psiClasses) {
-                if (isPsiTestClass(psiClass)) {
-                    return true
-                }
-            }
-            return false
+            isTest = psiClasses.any { isPsiTestClass(it) }
+        } else {
+            isTest = testDirs.any { testDir -> file.path.startsWith(testDir.path) }
         }
 
-        project.service<PluginCheckerService>().getTestDirectories().forEach { testDir ->
-            if (file.path.startsWith(testDir.path)) {
-                return true
-            }
-        }
-        return false
+        return isTest
     }
 
     fun isPsiTestClass(psiClass: PsiClass): Boolean {
@@ -50,15 +44,15 @@ class TestEnvCheckerService(private val project: Project) {
     }
 
     fun isKtTestClass(ktClass: KtClass): Boolean {
-        if (project.service<PluginCheckerService>().getTestDirectories().isNotEmpty()) {
+        val testDirs = project.service<PluginCheckerService>().getTestDirectories()
+        val isTest = if (testDirs.isNotEmpty()) {
             val file = getFileFromPsiFile(ktClass.containingFile)
-            if (file != null) {
-                return isTestFile(file)
-            }
-            return false
+            file?.let { isTestFile(it) } ?: false
+        } else {
+            val fqn = ktClass.fqName.toString()
+            fqn.endsWith("Test")
         }
-        val fqn = ktClass.fqName.toString()
-        return fqn.endsWith("Test")
+        return isTest
     }
 
     private fun getFileFromPsiFile(psiFile: PsiFile): File? {

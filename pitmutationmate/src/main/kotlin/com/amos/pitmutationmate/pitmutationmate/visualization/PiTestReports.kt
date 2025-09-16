@@ -29,14 +29,11 @@ private class CellRenderer : DefaultTableCellRenderer() {
         row: Int,
         column: Int
     ): Component {
-        if (value is PiTestClassReport) {
-            return value
-        } else if (value is CustomProgressBar) {
-            return value
-        } else if (value is JBLabel) {
-            return value
-        } else {
-            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+        return when (value) {
+            is PiTestClassReport,
+            is CustomProgressBar,
+            is JBLabel -> value as Component
+            else -> super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
         }
     }
 }
@@ -141,7 +138,7 @@ class PiTestReports : JPanel() {
         this.reports.add(report)
     }
     fun deleteReports() {
-        this.reports.removeAll(reports)
+        this.reports.removeAll(reports.toSet())
     }
 
     fun setSummary(summary: PiTestClassReport) {

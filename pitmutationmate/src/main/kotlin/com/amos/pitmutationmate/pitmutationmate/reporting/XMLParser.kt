@@ -202,21 +202,17 @@ class XMLParser {
     }
 
     private inline fun <reified T> getAttribute(element: Element, attributeName: String, defaultValue: T): T {
-        return try {
-            val attributeValue = element.getAttribute(attributeName)
-            if (attributeValue.isNotEmpty()) {
-                when (T::class) {
-                    Boolean::class -> attributeValue.toBoolean() as T
-                    Int::class -> attributeValue.toIntOrNull() as? T ?: defaultValue
-                    String::class -> attributeValue as T
-                    else -> defaultValue
-                }
-            } else {
-                defaultValue
+        val attributeValue = element.getAttribute(attributeName)
+        if (attributeValue.isNotEmpty()) {
+            return when (T::class) {
+                Boolean::class -> attributeValue.toBoolean() as T
+                Int::class -> attributeValue.toIntOrNull() as? T ?: defaultValue
+                String::class -> attributeValue as T
+                else -> defaultValue
             }
-        } catch (e: Exception) {
-            defaultValue
         }
+
+        return defaultValue
     }
 
     data class ResultData(
